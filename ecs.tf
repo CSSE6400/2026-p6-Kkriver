@@ -51,36 +51,35 @@ resource "aws_ecs_service" "taskoverflow" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.taskoverflow.arn
+    container_name   = "taskoverflow"
+    container_port   = 6400
+  }
+
   network_configuration {
-    subnets             = data.aws_subnets.private.ids
-    security_groups     = [aws_security_group.taskoverflow.id]
-    assign_public_ip    = true
+    subnets          = data.aws_subnets.private.ids
+    security_groups  = [aws_security_group.taskoverflow.id]
+    assign_public_ip = true
   }
 
 }
 
 resource "aws_security_group" "taskoverflow" {
-  name = "taskoverflow"
+  name_prefix = "taskoverflow-"
   description = "TaskOverflow Security Group"
 
   ingress {
-    from_port = 6400
-    to_port = 6400
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port = 22
-    to_port = 22
-    protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port       = 6400
+    to_port         = 6400
+    protocol        = "tcp"
+    security_groups = [aws_security_group.taskoverflow_lb.id]
   }
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
